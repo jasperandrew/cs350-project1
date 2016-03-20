@@ -9,7 +9,7 @@
 int main(int argc, char** argv)
 {
   freeSpace = atoi(argv[1]);
-   MAXSPACE = freeSpace;
+  MAXSPACE = freeSpace;
   char* fileName = argv[2];
   
   initializeList();
@@ -159,7 +159,7 @@ void refer(int procNum, int  vpn)
 	}
       totalRef++;
       fRate = (faults/totalRef);
-      printf("faults total: %d  references total: %.2f fault rate: %.2f\n", faults, totalRef, fRate);
+      printf("faults total: %d  references total: %.0f fault rate: %.4f\n", faults, totalRef, fRate);
     }
   return;
 }
