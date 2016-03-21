@@ -131,13 +131,14 @@ void terminate(int procNum)
 	{
 	  //pageTables[i][k] = 0x00000000;
 	  //update free frames
-	  if(freeSpace < MAXSPACE)
+	  if(freeSpace < MAXSPACE && pageTables[i][k] == 0x1)
 	    {
 	      freeSpace++;
 	    }
 	}
       free(pageTables[i]);
       //printf("free frames: %d\n", freeSpace);
+      printf("free frames: %d\n", freeSpace);
     }
   return;
 }
