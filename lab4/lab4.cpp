@@ -2,8 +2,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <stdlib.h>
-#include <random>
 #include <vector>
+#include <time.h>
 
 using namespace std;
 
@@ -28,12 +28,14 @@ class Process {
 
 int main(int argc, char **argv)
 {
-	unsigned int flag, tmp, num_procs = 1, min_size = 50, max_size = 150, quantum = 4, locality = 5, base_pid = rand() % 90000 + 10000;
+	srand(time(NULL));
+	int flag, tmp, num_procs = 1, min_size = 50, max_size = 150, min_refs = 10, max_refs = 100, quantum = 4, base_pid = rand() % 90000 + 10000, locality = 5;
+	char* out_file = NULL;
 	opterr = 0;
-	while((flag = getopt (argc, argv, "un:l:R:")) != -1){
+	while((flag = getopt (argc, argv, "un:s:S:r:R:q:p:l:o:")) != -1){
 		switch(flag){
 			case 'u':
-				printf("Usage: lab4 [-u] [-n <num-procs>] [-s <min-size>] [-S <max-size>] [-q <references-per-quantum>] [-p <base-pid>] [-l <locality>]\n");
+				printf("Usage: lab4 [-u] [-n <num-procs>] [-s <min-size>] [-S <max-size>] [-r <min-refs>] [-R <max-refs>] [-q <refs-per-quantum>] [-p <base-pid>] [-l <locality>]\n");
 				return 0;
 			case 'n':
 				tmp = atoi(optarg);
@@ -59,6 +61,24 @@ int main(int argc, char **argv)
 					max_size = tmp;
 				}else{
 					fprintf(stderr, "[Error] Maximum address space size must be a positive value.\n");
+					return 1;
+				}
+				break;
+			case 'r':
+				tmp = atoi(optarg);
+				if(tmp > 0){
+					min_refs = tmp;
+				}else{
+					fprintf(stderr, "[Error] Minimum references per process must be a positive value.\n");
+					return 1;
+				}
+				break;
+			case 'R':
+				tmp = atoi(optarg);
+				if(tmp > 0){
+					max_refs = tmp;
+				}else{
+					fprintf(stderr, "[Error] Maximum references per process must be a positive value.\n");
 					return 1;
 				}
 				break;
@@ -89,8 +109,11 @@ int main(int argc, char **argv)
 					return 1;
 				}
 				break;
+			case 'o':
+				out_file = optarg;
+				break;
 			case '?':
-				if (optopt == 'n' || optopt == 'l' || optopt == 'R')
+				if (optopt == 'n' || optopt == 's' || optopt == 'S' || optopt == 'r' || optopt == 'R' || optopt == 'q' || optopt == 'p' || optopt == 'l' || optopt == 'o')
 					fprintf(stderr, "[Error] Option -%c requires an argument\n", optopt);
 				else
 					fprintf(stderr, "[Error] Unknown option character '%c'\n", optopt);
@@ -104,22 +127,24 @@ int main(int argc, char **argv)
 			fprintf(stderr, "[Error] Minimum size must be less than or equal to maximum.\n");
 			return 1;
 		}
+		if(min_refs > max_refs){
+			fprintf(stderr, "[Error] Minimum references must be less than or equal to maximum.\n");
+			return 1;
+		}
 	}
-	
-	random_device rd;
-	mt19937 rng(rd());
-	uniform_int_distribution<int> uni(min_size, max_size);
-	int size_rng = uni(rng);
 
 	vector<Process> proc_list;
 	
 	for(int i = 0; i < num_procs; i++){
-		int ref = rand() % 100 + 1; // temporary
-		Process tmp(base_pid + i, ref, size_rng);
+		int size_rng = min_size + (rand() % (max_size - min_size + 1));
+		int ref_rng = min_refs + (rand() % (max_refs - min_refs	+ 1));
+		Process tmp(base_pid + i, ref_rng, size_rng);
 		proc_list.push_back(tmp);
 	}
 	
-	freopen("out.txt", "w", stdout);
+	if(out_file != NULL){
+		freopen(out_file, "w", stdout);
+	}
 	
 	while(proc_list.size() > 0){
 		for(int i = 0; i < proc_list.size(); i++){
