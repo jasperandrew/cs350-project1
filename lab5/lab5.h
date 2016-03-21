@@ -10,7 +10,7 @@ int faults = 0;
 double totalRef = 0;
 double fRate = 0;
 
-void validateFileName(char* fileName);
+void validateArgs(char* arg1, char* arg2);
 int  validateProc(int procNum, char mode);
 void initializeList();
 void start(int procNum, int addrSz);

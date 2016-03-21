@@ -8,12 +8,13 @@
 
 int main(int argc, char** argv)
 {
+  validateArgs(argv[1],argv[2]);
   freeSpace = atoi(argv[1]);
   MAXSPACE = freeSpace;
   char* fileName = argv[2];
   
   initializeList();
-  validateFileName(fileName);
+
   char commandCheck[12];
   //param2 can be address size or vpn depending on instruction
   int procNum, param2 = 0;
@@ -136,7 +137,7 @@ void terminate(int procNum)
 	    }
 	}
       free(pageTables[i]);
-      printf("free frames: %d\n", freeSpace);
+      //printf("free frames: %d\n", freeSpace);
     }
   return;
 }
@@ -152,13 +153,14 @@ void refer(int procNum, int  vpn)
 	{
 	  faults++;
 	}
-      else if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
+      if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{
-	  pageTables[procListIndex][vpn] == 0x1; 
+	  pageTables[procListIndex][vpn] = 0x1; 
 	  freeSpace--;
 	}
       totalRef++;
       fRate = (faults/totalRef);
+      printf("free frames: %d\n", freeSpace);
       printf("faults total: %d  references total: %.0f fault rate: %.4f\n", faults, totalRef, fRate);
     }
   return;
@@ -202,11 +204,11 @@ int  validateProc(int procNum, char mode)
     return i;
 }
 
-void validateFileName(char* fileName)
+void validateArgs(char* arg1, char* arg2)
 {
-  if(fileName == NULL)
+  if(arg1  == NULL || arg2  == NULL)
     {
-      fprintf(stderr, "forgot input or output file name\n");
+      fprintf(stderr, "forgot input file name or number of frames\n");
       exit(0);
     }
   return;
