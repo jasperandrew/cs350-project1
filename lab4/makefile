@@ -1,5 +1,4 @@
-ARGS=
-
+# Jasper Andrew, Jacob Zwickler
 make: lab4.o 
 	g++ -o lab4 lab4.o
 

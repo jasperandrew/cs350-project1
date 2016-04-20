@@ -9,7 +9,7 @@ using namespace std;
 
 class Process {
 	public:
-		Process(int n, int r, int s): pid(n), tot_refs(r), rem_refs(r), size(s), min_ref(0), max_ref(s), phase(1) {}
+		Process(int n, int r, int s): pid(n), tot_refs(r), rem_refs(r), size(s), min_ref(0), max_ref(s-1), phase(1) {}
 		int getPID(){ return pid; }
 		int getTotRefs(){ return tot_refs; }
 		int getRemRefs(){ return rem_refs; }
@@ -17,24 +17,20 @@ class Process {
 		int getPhase(){ return phase; }
 		void incPhase(){ phase++; }
 		double getPctDone(){ return ((tot_refs-rem_refs)/(double)tot_refs)*100; }
-		void changeLocality(int l){
-			if(l == -1){
+		void changeLocus(int l){
+			if(l == 0){
 				min_ref = 0;
-				max_ref = size;
+				max_ref = size-1;
 				return;
 			}
-			int locus = min_ref + (rand() % (max_ref - min_ref + 1));
-			if(l == -2){
-				l = min_ref + (rand() % (max_ref/3 - min_ref + 1));
-			}
-			if(locus - l < 0) locus = l;
-			min_ref = locus - l;
-			if(locus + l > size) locus = size - l;
-			max_ref = locus + l;
+			int locus = 0 + (rand() % (size));
+
+			min_ref = (locus - l < 0 ? 0 : locus - l);
+			max_ref = (locus + l > size-1 ? size-1 : locus + l);
 		}
 		int getFrame(){
 			rem_refs--;
-			return min_ref + (rand() % (max_ref - min_ref	+ 1));
+			return min_ref + (rand() % (max_ref - min_ref + 1));
 		}
 	private:
 		int pid, rem_refs, tot_refs, size, min_ref, max_ref, phase;
@@ -50,7 +46,7 @@ int run(int num_procs, int min_size, int max_size, int min_refs, int max_refs, i
 		Process tmp(base_pid + i, ref_rng, size_rng);
 		
 		if(locality > 0){
-			tmp.changeLocality(locality);
+			tmp.changeLocus(locality);
 		}
 		
 		proc_list.push_back(tmp);
@@ -59,7 +55,7 @@ int run(int num_procs, int min_size, int max_size, int min_refs, int max_refs, i
 	if(out_file != NULL){
 		freopen(out_file, "w", stdout);
 	}
-	
+
 	while(proc_list.size() > 0){
 		for(int i = 0; i < proc_list.size(); i++){
 			if(proc_list[i].getTotRefs() == proc_list[i].getRemRefs())
@@ -68,7 +64,7 @@ int run(int num_procs, int min_size, int max_size, int min_refs, int max_refs, i
 			for(int j = 0; j < quantum; j++){
 				if(proc_list[i].getRemRefs() > 0){
 					if(proc_list[i].getPctDone() >= ((1.0/phases)*100) * proc_list[i].getPhase()){
-						proc_list[i].changeLocality(rand() % 3 > 1 ? -1 : (locality > 0 ? locality : -2));
+						proc_list[i].changeLocus(locality);
 						proc_list[i].incPhase();
 					}
 					
