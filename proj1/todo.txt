@@ -1,0 +1,5 @@
+- global history
+	- whenever you "make a reference" add that page to the history
+	- if the page is already in the history, bring it to the front
+	- if the history is full (no more memory left) 
+		evict the last page in the history (remove it from memory and the history)
