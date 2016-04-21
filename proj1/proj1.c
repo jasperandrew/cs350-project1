@@ -6,6 +6,8 @@
 
 #define LIMIT 1000
 
+void selectVictim(int procNum, int VPN);
+
 int main(int argc, char** argv)
 {
   validateArgs(argv[1],argv[2]);
@@ -13,7 +15,8 @@ int main(int argc, char** argv)
   MAXSPACE = freeSpace;
   char* fileName = argv[2];
   globalHistory = malloc(MAXSPACE * sizeof(int));
-  
+  Node lruLinkList;
+
   initializeList();
 
   char commandCheck[12];
@@ -84,7 +87,7 @@ void start(int procNum, int addrSz)
       //place process in process list
       procList[i] = procNum;
   
-      //create an "adress space" for the process at same index as process list
+      //create an "address space" for the process at same index as process list
       int* temp  = malloc(sizeof(int)*(addrSz+1));
       pageTables[i] = temp;
   
@@ -157,7 +160,7 @@ void refer(int procNum, int  vpn)
 	}
       else if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
 	{
-	  //replacements
+	   
 	}
       if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{

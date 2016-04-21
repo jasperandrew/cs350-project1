@@ -2,6 +2,14 @@
 #define lab5_h
 
 
+typedef struct node
+{
+  int processNum;
+  int vpn;
+  Node next;
+
+}Node; 
+
 int* pageTables[1000];
 int *globalHistory;
 int procList[1000];
