@@ -1,15 +1,18 @@
+
 #ifndef lab5_h
 #define lab5_h
 
+typedef struct Node Node;
 
-typedef struct node
+struct Node
 {
-  int processNum;
+  int procNum;
   int vpn;
-  Node next;
+  Node *next;
+  Node *prev;
+}; 
 
-}Node; 
-
+Node *lruHead;
 int* pageTables[1000];
 int *globalHistory;
 int procList[1000];

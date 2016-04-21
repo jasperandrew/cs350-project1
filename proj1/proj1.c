@@ -6,7 +6,7 @@
 
 #define LIMIT 1000
 
-void selectVictim(int procNum, int VPN);
+void insertNode(int procNum, int VPN);
 
 int main(int argc, char** argv)
 {
@@ -14,8 +14,8 @@ int main(int argc, char** argv)
   freeSpace = atoi(argv[1]);
   MAXSPACE = freeSpace;
   char* fileName = argv[2];
-  globalHistory = malloc(MAXSPACE * sizeof(int));
-  Node lruLinkList;
+  //globalHistory = malloc(MAXSPACE * sizeof(int));
+  
 
   initializeList();
 
@@ -65,7 +65,7 @@ void initializeList()
 void start(int procNum, int addrSz)
 {
   int i = 0;
-  int k = 0;
+  //  int k = 0;
   
   //search if process already running 
   int valid =  validateProc(procNum, 's');
@@ -154,13 +154,27 @@ void refer(int procNum, int  vpn)
   int procListIndex = validateProc(procNum, 't');
   if(procListIndex >=  0)
     {
+      insertNode(procNum, vpn);
       if((pageTables[procListIndex][0]-1) <  vpn || (pageTables[procListIndex][vpn] != 0x1) || freeSpace == 00)
 	{
 	  faults++;
 	}
-      else if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
+     if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
 	{
-	   
+	  /*	  //evict 
+	  int evictProcNum = lruHead->procNum;
+	  int evictVPN = lruHead->vpn;
+	  pageTables[evictProcNum][evictVPN] = 0x0;
+	  printf("vicitm proc: %d page: %d\n", lruHead->procNum, lruHead->vpn);
+	  // if(lruHead->next != NULL)
+	    lruHead = lruHead -> next;
+	  freeSpace++;
+	  faults++;
+
+	  
+	  //put page in mem
+	  pageTables[procListIndex][vpn] = 0x1;
+	  freeSpace--; */
 	}
       if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{
@@ -223,3 +237,51 @@ void validateArgs(char* arg1, char* arg2)
   return;
 } 
 
+void insertNode(int procNum, int VPN)
+{
+  printf("\ninserting  proc: %d page: %d\n", procNum, VPN);
+  Node *head = lruHead;
+  Node *current = NULL;
+  if(lruHead == NULL)
+    {
+      Node mru;
+      mru.procNum = procNum;
+      mru.vpn = VPN;
+      lruHead = &mru;
+      printf("Head created\n");
+      return;
+    }
+  while(head-> next != NULL)
+    {
+      if(head->procNum == procNum && head->vpn == VPN)
+	{
+	  head->prev->next = head -> next;
+	  if(lruHead != head)
+	    head ->next->prev = head->prev;
+	  current = head;
+	}
+      head = head->next;
+      /*      if(head != NULL)
+	{
+	printf("\nproc: %d page: %d\n", head->procNum, head->vpn); 
+	}*/
+    }
+  if(current == NULL)
+    {
+      Node mru;
+      mru.procNum = procNum;
+      mru.vpn = VPN;
+      head = &mru;
+    }
+  else if(current == head)
+    {
+      return;
+    }
+  else
+    {
+      head->next = current;
+    }
+  if(head != NULL)
+    printf("\n mru proc: %d page: %d\n", head->procNum, head->vpn);
+  return;
+}
