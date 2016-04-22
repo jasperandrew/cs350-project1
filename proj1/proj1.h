@@ -18,7 +18,6 @@ struct h_node_s {
 };
 
 h_node *globalHist = NULL;
-
 int *pageTables[PROCESS_LIMIT];
 int procList[PROCESS_LIMIT];
 int freePages;
@@ -26,8 +25,8 @@ int totalPages;
 int numFaults = 0;
 int numRefs = 0;
 
-int validateProc(int procNum, int mode);
 void initializeProcList();
+int validateProc(int procNum, int mode);
 int start(int procNum, int addrSz);
 int terminate(int procNum);
 int reference(int procNum, int  vpn);

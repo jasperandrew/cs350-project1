@@ -154,14 +154,24 @@ void updateHistory(int procNum, int vpn)
   if(globalHist == NULL){
 		globalHist = malloc(sizeof(h_node));
 		globalHist->procNum = procNum;
-		globalHist->vpn = 1;
+		globalHist->vpn = vpn;
 		globalHist->prev = NULL;
 		globalHist->next = NULL;
-		
-		printf("first\n");
-		printf("%d %d\n", globalHist->procNum, globalHist->vpn);
+		printf("-(%d|%d)-\n", globalHist->procNum, globalHist->vpn);
 		return;
 	}
+	
+	h_node *itr = globalHist;
+	while(itr->next != NULL){
+		itr = itr->next;
+	}
+	
+	h_node *newNode = malloc(sizeof(h_node));
+	newNode->procNum = procNum;
+	newNode->vpn = vpn;
+	newNode->prev = itr;
+	newNode->next = NULL;
+	itr->next = newNode;
 
 	h_node *bob = globalHist;
 	while(bob != NULL){
@@ -219,7 +229,9 @@ int main(int argc, char** argv)
 			reference(procNum, pageNum);
 		}      
 	}
+	
   close(input);
 	freeHistory();
-  return 0;
+  
+	return 0;
 }
