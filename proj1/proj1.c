@@ -16,7 +16,6 @@ int main(int argc, char** argv)
   char* fileName = argv[2];
   //globalHistory = malloc(MAXSPACE * sizeof(int));
   
-
   initializeList();
 
   char commandCheck[12];
