@@ -1,7 +1,5 @@
 //Jasper Andrew and Jacob Zwickler
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "proj1.h"
 
 #define LIMIT 1000
@@ -158,24 +156,29 @@ void refer(int procNum, int  vpn)
 	{
 	  faults++;
 	}
-     if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
+      if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
 	{
-	  /*	  //evict 
-	  int evictProcNum = lruHead->procNum;
-	  int evictVPN = lruHead->vpn;
-	  pageTables[evictProcNum][evictVPN] = 0x0;
-	  printf("vicitm proc: %d page: %d\n", lruHead->procNum, lruHead->vpn);
-	  // if(lruHead->next != NULL)
-	    lruHead = lruHead -> next;
-	  freeSpace++;
-	  faults++;
+
+	    /*//evict 
+	  if(ghHead != NULL)
+	    {
+	      int evictProcNum = validateProc(ghHead->procNum, 't');
+	      int evictVPN = ghHead->vpn;
+	      pageTables[evictProcNum][evictVPN] = 0;
+	      printf("vicitm proc: %d page: %d\n", ghHead->procNum, ghHead->vpn);
+	      //if(ghHead->next != NULL)
+	      ghHead = ghHead -> next;
+	      freeSpace++;
+	      faults++;
 
 	  
-	  //put page in mem
-	  pageTables[procListIndex][vpn] = 0x1;
-	  freeSpace--; */
+	      //put page in mem
+	      pageTables[procListIndex][vpn] = 0x1;
+	      freeSpace--; 
+	      }*/
+
 	}
-      if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
+     if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{
 	  pageTables[procListIndex][vpn] = 0x1;
 	  freeSpace--;
@@ -236,41 +239,45 @@ void validateArgs(char* arg1, char* arg2)
   return;
 } 
 
-void insertNode(int procNum, int VPN)
+void insertNode(int procNum, int vpn)
 {
-  printf("\ninserting  proc: %d page: %d\n", procNum, VPN);
-  Node *head = lruHead;
-  Node *current = NULL;
-  if(lruHead == NULL)
+  //Node *current = NULL;
+  if(ghHead == NULL)
     {
       Node mru;
       mru.procNum = procNum;
-      mru.vpn = VPN;
-      lruHead = &mru;
-      printf("Head created\n");
-      return;
+      mru.vpn = vpn;
+			mru.next = NULL;
+			mru.prev = NULL;
+      ghHead = &mru;
+ 			printf("first\n");
+			printf("%d %d\n", ghHead->procNum, ghHead->vpn);
+			return;
     }
-  while(head-> next != NULL)
+	//Node *head = ghHead;
+	printf("%d %d\n", ghHead->procNum, ghHead->vpn);
+	/*while(head->next != NULL)
     {
-      if(head->procNum == procNum && head->vpn == VPN)
-	{
-	  head->prev->next = head -> next;
-	  if(lruHead != head)
-	    head ->next->prev = head->prev;
-	  current = head;
-	}
+      /*if(head->procNum == procNum && head->vpn == vpn)
+				{
+					head->prev->next = head -> next;
+					if(ghHead != head)
+						head ->next->prev = head->prev;
+					current = head;
+				}*
+      //head = head->next;
       head = head->next;
-      /*      if(head != NULL)
-	{
-	printf("\nproc: %d page: %d\n", head->procNum, head->vpn); 
-	}*/
+			printf("next\n");
+			printf("%d %d\n", head->procNum, head->vpn);
     }
-  if(current == NULL)
+  /*if(current == NULL)
     {
       Node mru;
       mru.procNum = procNum;
-      mru.vpn = VPN;
-      head = &mru;
+      mru.vpn = vpn;
+			mru.next = NULL;
+			mru.prev = head;
+      head->next = &mru;
     }
   else if(current == head)
     {
@@ -279,8 +286,15 @@ void insertNode(int procNum, int VPN)
   else
     {
       head->next = current;
-    }
-  if(head != NULL)
-    printf("\n mru proc: %d page: %d\n", head->procNum, head->vpn);
-  return;
+    }*
+		
+
+		Node *bob = ghHead;
+		while(bob != NULL){
+			printf("-(%d|%d)-", bob->procNum, bob->vpn);
+			bob = bob->next;
+		}
+		printf("\n");*/
+		
+		return;
 }
