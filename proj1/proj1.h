@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 #ifndef lab5_h
 #define lab5_h
