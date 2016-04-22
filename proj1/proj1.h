@@ -14,17 +14,16 @@ h_node *ghHead = NULL;
 int *pageTables[PROCESS_LIMIT];
 int *globalHistory;
 int procList[PROCESS_LIMIT];
-int freeSpace = 0;
-int MAXSPACE = 0;
+int freePages = 0;
+int totalPages = 0;
 int faults = 0;
 double totalRef = 0;
 double fRate = 0;
 
-void validateArgs(char* arg1, char* arg2);
-int  validateProc(int procNum, char mode);
-void initializeList();
-void start(int procNum, int addrSz);
-void terminate(int procNum);
-void refer(int procNum,int  vpn);
+int validateProc(int procNum, int mode);
+void initializeProcList();
+int start(int procNum, int addrSz);
+int terminate(int procNum);
+int reference(int procNum,int  vpn);
 
 #endif
