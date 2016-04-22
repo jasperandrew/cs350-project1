@@ -82,7 +82,7 @@ void terminate(int procNum)
 	for(i = 1; i < size; i++){
 		//update free pages
 		if(freePages < totalPages && pageInMem(procListIdx, i)){
-			evictPage(procListIdx, i);
+			deletePage(procListIdx, i);
 		}
 	}
 	
@@ -92,7 +92,7 @@ void terminate(int procNum)
 void reference(int procNum, int  vpn)
 {
   int procListIdx = getValidProcIndex(procNum, 0);
-	
+
 	// if( page number is out of bounds )
 	if(vpn < 1 || vpn > getAddrSpaceSize(procListIdx)){
 		fprintf(stderr, "[Error] Page number out of bounds\n");
@@ -100,20 +100,21 @@ void reference(int procNum, int  vpn)
 		cleanUp();
 		exit(1);
 	}
-	
-	updateHistory(procNum, vpn);
-	
+		
 	// if( page is not in memory )
 	if(!pageInMem(procListIdx, vpn)){
-		// if( memory is not full )
-		if(freePages > 0){
-			storePage(procListIdx, vpn);
-		}else{
+		// if( memory is full )
+		if(!freePages){
 			// evict a page
 			leastRecentlyUsed();
 		}
+		
+		storePage(procListIdx, vpn);
+		
 		numFaults++;
 	}
+	
+	updateHistory(procNum, vpn);
 	
 	numRefs++;
 	printf("free frames: %d\n", freePages);
@@ -185,7 +186,7 @@ void updateHistory(int procNum, int vpn)
 		globalHist->vpn = vpn;
 		globalHist->prev = NULL;
 		globalHist->next = NULL;
-		printf("-(%d|%d)-\n", globalHist->procNum, globalHist->vpn);
+		printf("-[%d|%d]-\n", globalHist->procNum, globalHist->vpn);
 		return;
 	}
 	
@@ -214,7 +215,7 @@ void updateHistory(int procNum, int vpn)
 
 	h_node *bob = globalHist;
 	while(bob != NULL){
-		printf("-(%d|%d)-", bob->procNum, bob->vpn);
+		printf("-[%d|%d]-", bob->procNum, bob->vpn, pageInMem(getValidProcIndex(bob->procNum, 0), bob->vpn));
 		bob = bob->next;
 	}
 	printf("\n");
@@ -227,5 +228,13 @@ void updateHistory(int procNum, int vpn)
 \*-------------------------------------------------------------*/
 void leastRecentlyUsed()
 {
+	deletePage(getValidProcIndex(globalHist->procNum, 0), globalHist->vpn);
 	
+	h_node *tmp = globalHist;
+	if(globalHist->next != NULL){
+		globalHist->next->prev = NULL;
+		globalHist = globalHist->next;
+	}
+
+	free(tmp);
 }

@@ -34,13 +34,12 @@ void reference(int procNum, int  vpn);
 // Helper functions
 int getValidProcIndex(int procNum, int mode);
 int currProcCount();
-int getAddrSpaceSize(int procListIdx){ return pageTables[procListIdx][0]; }
+void cleanUp();
 
+int getAddrSpaceSize(int procListIdx){ return pageTables[procListIdx][0]; }
 int pageInMem(int procListIdx, int vpn){ return pageTables[procListIdx][vpn]; }
 void storePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 1; freePages--; }
-void evictPage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 0; freePages++; }
-
-void cleanUp();
+void deletePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 0; freePages++; }
 
 // History functions
 void updateHistory(int procNum, int  vpn);
