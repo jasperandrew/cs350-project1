@@ -71,13 +71,13 @@ int reference(int procNum, int  vpn)
 	int addrSpaceSize = pageTables[procListIndex][0];
 	int inMemory = pageTables[procListIndex][vpn];
 	
-	insertNode(procNum, vpn);
+	updateHistory(procNum, vpn);
 	
 	// if( page number is out of bounds )
 	if(vpn < 1 || vpn > addrSpaceSize){
 		fprintf(stderr, "[Error] Page number out of bounds\n");
 		fprintf(stderr, "        Please use a valid input file\n");
-		exit(1);
+		return 1;
 	}
 	
 	// if( page is not in memory )
@@ -124,8 +124,6 @@ int reference(int procNum, int  vpn)
   return 0;
 }
 
-
-/*------Validation----*/
 int validateProc(int procNum, int mode)
 {
   int i;
@@ -151,7 +149,7 @@ int validateProc(int procNum, int mode)
 	return -1;
 }
 
-void insertNode(int procNum, int vpn)
+void updateHistory(int procNum, int vpn)
 {
   if(globalHist == NULL){
 		globalHist = malloc(sizeof(h_node));
@@ -173,6 +171,15 @@ void insertNode(int procNum, int vpn)
 	printf("\n");
 	
 	return;
+}
+
+void freeHistory()
+{
+	h_node *itr = globalHist, *curr;
+	while((curr = itr) != NULL){
+		itr = itr->next;
+		free(curr);
+	}
 }
 
 int main(int argc, char** argv)
@@ -213,5 +220,6 @@ int main(int argc, char** argv)
 		}      
 	}
   close(input);
+	freeHistory();
   return 0;
 }

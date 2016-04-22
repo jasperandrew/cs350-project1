@@ -31,6 +31,7 @@ void initializeProcList();
 int start(int procNum, int addrSz);
 int terminate(int procNum);
 int reference(int procNum, int  vpn);
-void insertNode(int procNum, int  vpn);
+void updateHistory(int procNum, int  vpn);
+void freeHistory();
 
 #endif
