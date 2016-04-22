@@ -254,9 +254,9 @@ void insertNode(int procNum, int vpn)
 			printf("%d %d\n", ghHead->procNum, ghHead->vpn);
 			return;
     }
-	//Node *head = ghHead;
-	printf("%d %d\n", ghHead->procNum, ghHead->vpn);
-	/*while(head->next != NULL)
+		
+	Node *itr = ghHead;
+	while(itr->next != NULL)
     {
       /*if(head->procNum == procNum && head->vpn == vpn)
 				{
@@ -264,21 +264,21 @@ void insertNode(int procNum, int vpn)
 					if(ghHead != head)
 						head ->next->prev = head->prev;
 					current = head;
-				}*
+				}*/
       //head = head->next;
-      head = head->next;
+      itr = itr->next;
 			printf("next\n");
-			printf("%d %d\n", head->procNum, head->vpn);
     }
-  /*if(current == NULL)
-    {
+		printf("%d %d\n", itr->procNum, itr->vpn);
+  //if(current == NULL)
+    //{
       Node mru;
       mru.procNum = procNum;
       mru.vpn = vpn;
 			mru.next = NULL;
-			mru.prev = head;
-      head->next = &mru;
-    }
+			mru.prev = &itr;
+      itr->next = &mru;
+    /*}
   else if(current == head)
     {
       return;
@@ -286,7 +286,7 @@ void insertNode(int procNum, int vpn)
   else
     {
       head->next = current;
-    }*
+    }*/
 		
 
 		Node *bob = ghHead;
@@ -294,7 +294,7 @@ void insertNode(int procNum, int vpn)
 			printf("-(%d|%d)-", bob->procNum, bob->vpn);
 			bob = bob->next;
 		}
-		printf("\n");*/
+		printf("\n");
 		
 		return;
 }

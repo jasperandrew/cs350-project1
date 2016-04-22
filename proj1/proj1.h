@@ -13,7 +13,7 @@ struct Node
   int vpn;
   Node *next;
   Node *prev;
-}; 
+};
 
 Node *ghHead = NULL;
 int* pageTables[1000];
