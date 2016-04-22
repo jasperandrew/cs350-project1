@@ -153,14 +153,14 @@ void refer(int procNum, int  vpn)
   int procListIndex = validateProc(procNum, 't');
   if(procListIndex >=  0)
     {
-      insertNode(procNum, vpn);
+      // insertNode(procNum, vpn);
       if((pageTables[procListIndex][0]-1) <  vpn || (pageTables[procListIndex][vpn] != 0x1) || freeSpace == 00)
 	{
 	  faults++;
 	}
-     if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
+      /*if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
 	{
-	  /*	  //evict 
+	    //evict 
 	  int evictProcNum = lruHead->procNum;
 	  int evictVPN = lruHead->vpn;
 	  pageTables[evictProcNum][evictVPN] = 0x0;
@@ -173,9 +173,9 @@ void refer(int procNum, int  vpn)
 	  
 	  //put page in mem
 	  pageTables[procListIndex][vpn] = 0x1;
-	  freeSpace--; */
-	}
-      if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
+	  freeSpace--; 
+	}*/
+     if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{
 	  pageTables[procListIndex][vpn] = 0x1; 
 	  freeSpace--;
