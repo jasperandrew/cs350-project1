@@ -5,25 +5,32 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "h_node.h"
 
 #define PROCESS_LIMIT 1000
 
-h_node *ghHead = NULL;
+typedef struct h_node_s h_node;
+
+struct h_node_s {
+	int procNum;
+	int vpn;
+	struct h_node_s *prev;
+	struct h_node_s *next;
+};
+
+h_node *globalHist = NULL;
 
 int *pageTables[PROCESS_LIMIT];
-int *globalHistory;
 int procList[PROCESS_LIMIT];
-int freePages = 0;
-int totalPages = 0;
-int faults = 0;
-double totalRef = 0;
-double fRate = 0;
+int freePages;
+int totalPages;
+int numFaults = 0;
+int numRefs = 0;
 
 int validateProc(int procNum, int mode);
 void initializeProcList();
 int start(int procNum, int addrSz);
 int terminate(int procNum);
-int reference(int procNum,int  vpn);
+int reference(int procNum, int  vpn);
+void insertNode(int procNum, int  vpn);
 
 #endif

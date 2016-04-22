@@ -23,8 +23,7 @@ int start(int procNum, int addrSpaceSize)
 	procList[i] = procNum;
 	
 	// create an "address space" for the process at same index as process list
-	int *temp = malloc(sizeof(int) * (addrSpaceSize+1));
-	pageTables[i] = temp;
+	pageTables[i] = malloc(sizeof(int) * (addrSpaceSize+1));
 	
 	// set address space size
 	pageTables[i][0] = addrSpaceSize;
@@ -72,7 +71,7 @@ int reference(int procNum, int  vpn)
 	int addrSpaceSize = pageTables[procListIndex][0];
 	int inMemory = pageTables[procListIndex][vpn];
 	
-	//insertNode(procNum, vpn);
+	insertNode(procNum, vpn);
 	
 	// if( page number is out of bounds )
 	if(vpn < 1 || vpn > addrSpaceSize){
@@ -90,7 +89,7 @@ int reference(int procNum, int  vpn)
 		}else{
 			
 		}
-		faults++;
+		numFaults++;
 	}else{
 		
 	}
@@ -118,9 +117,9 @@ int reference(int procNum, int  vpn)
 
 	//}
 	
-	totalRef++;
+	numRefs++;
 	printf("free frames: %d\n", freePages);
-	printf("faults total: %d  references total: %.0f fault rate: %.4f\n\n", faults, totalRef, faults/totalRef);
+	printf("faults( %d ), references( %d ) -> fault rate( %.4f )\n\n", numFaults, numRefs, (double)numFaults/numRefs);
 	
   return 0;
 }
@@ -153,23 +152,27 @@ int validateProc(int procNum, int mode)
 }
 
 void insertNode(int procNum, int vpn)
-{/*
-  //Node *current = NULL;
-  if(ghHead == NULL){
-      
- 			printf("first\n");
-			printf("%d %d\n", ghHead->procNum, ghHead->vpn);
-			return;
-    }
-
-		Node *bob = ghHead;
-		while(bob != NULL){
-			printf("-(%d|%d)-", bob->procNum, bob->vpn);
-			bob = bob->next;
-		}
-		printf("\n");
-		*/
+{
+  if(globalHist == NULL){
+		globalHist = malloc(sizeof(h_node));
+		globalHist->procNum = procNum;
+		globalHist->vpn = 1;
+		globalHist->prev = NULL;
+		globalHist->next = NULL;
+		
+		printf("first\n");
+		printf("%d %d\n", globalHist->procNum, globalHist->vpn);
 		return;
+	}
+
+	h_node *bob = globalHist;
+	while(bob != NULL){
+		printf("-(%d|%d)-", bob->procNum, bob->vpn);
+		bob = bob->next;
+	}
+	printf("\n");
+	
+	return;
 }
 
 int main(int argc, char** argv)
