@@ -1,3 +1,5 @@
+// Jasper Andrew and Jacob Zwickler
+
 #ifndef lab5_h
 #define lab5_h
 
@@ -5,13 +7,15 @@
 #include <stdlib.h>
 #include "h_node.h"
 
+#define PROCESS_LIMIT 1000
+
 h_node *ghHead = NULL;
 
-int* pageTables[1000];
+int *pageTables[PROCESS_LIMIT];
 int *globalHistory;
-int procList[1000];
+int procList[PROCESS_LIMIT];
 int freeSpace = 0;
-int  MAXSPACE = 0; 
+int MAXSPACE = 0;
 int faults = 0;
 double totalRef = 0;
 double fRate = 0;

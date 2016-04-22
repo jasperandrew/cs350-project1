@@ -1,51 +1,10 @@
-//Jasper Andrew and Jacob Zwickler
-
 #include "proj1.h"
-
-#define LIMIT 1000
-
-void insertNode(int procNum, int VPN);
-
-int main(int argc, char** argv)
-{
-  validateArgs(argv[1],argv[2]);
-  freeSpace = atoi(argv[1]);
-  MAXSPACE = freeSpace;
-  char* fileName = argv[2];
-  //globalHistory = malloc(MAXSPACE * sizeof(int));
-  
-  initializeList();
-
-  char commandCheck[12];
-  //param2 can be address size or vpn depending on instruction
-  int procNum, param2 = 0;
-
-  FILE *input = fopen(fileName, "r");
-                                                                                                                              
-  while(fscanf(input, "%s", commandCheck) != EOF){
-		if(!strncmp(commandCheck, "START", 2)){
-			fscanf(input, "%d %d\n", &procNum, &param2);
-			printf("Starting process %d with address size %d\n",procNum, param2);
-			start(procNum, param2);
-		}else if(!strncmp(commandCheck, "TERMINATE", 2)){
-			fscanf(input, "%d\n", &procNum);
-			printf("terminating process %d\n", procNum);
-			terminate(procNum);        
-		}else if(!strncmp(commandCheck, "REFERENCE", 2)){
-			fscanf(input, "%d %d\n", &procNum, &param2);
-			printf("Referencing process %d's page %d\n",procNum, param2);
-			refer(procNum, param2);
-		}      
-	}
-  close(input);
-  return 0;
-}
 
 void initializeList()
 {
   //start program with no processes running
   int i;
-  for(i = 0; i < LIMIT; i++){
+  for(i = 0; i < PROCESS_LIMIT; i++){
 		procList[i] = 0;
 	}
   return;
@@ -62,10 +21,10 @@ void start(int procNum, int addrSz)
   if(valid >= 0){
 		//search if limit for processes reached - 
 		while(procList[i] != 0){
-			if(i<LIMIT){
+			if(i<PROCESS_LIMIT){
 				i++;
 			}else{
-				fprintf(stderr, "Too many processes running. Limit is 1000!\n");
+				fprintf(stderr, "[Error] Too many processes running (max %d)\n", PROCESS_LIMIT);
 				return;
 			}
 		}
@@ -132,14 +91,13 @@ void terminate(int procNum)
   return;
 }
 
-
-/*------ Reference-------*/
-void refer(int procNum, int  vpn)
+void reference(int procNum, int  vpn)
 {
   int procListIndex = validateProc(procNum, 't');
   if(procListIndex >=  0){
-		insertNode(procNum, vpn);
+		//insertNode(procNum, vpn);
 		
+		// If 
 		if((pageTables[procListIndex][0]-1) <  vpn || (pageTables[procListIndex][vpn] != 0x1) || freeSpace == 00){
 			faults++;
 		}
@@ -181,14 +139,14 @@ void refer(int procNum, int  vpn)
 
 
 /*------Validation----*/
-int  validateProc(int procNum, char mode)
+int validateProc(int procNum, char mode)
 {
   int i;
   //search if process exists to terminate  
   if(mode == 't'){
 		i = 0;
 		while(procList[i] != procNum){
-			if(i < LIMIT){
+			if(i < PROCESS_LIMIT){
 				i++;
 			}else{
 				fprintf(stderr, "Processes does not exist! No process to terminate.\n");
@@ -198,7 +156,7 @@ int  validateProc(int procNum, char mode)
 	}
   //search if process is already running 
   else if(mode == 's'){
-		for(i = 0; i<LIMIT; i++){
+		for(i = 0; i<PROCESS_LIMIT; i++){
 			if(procList[i] == procNum){
 	      fprintf(stderr, "Processes already exists!\n");
 	      return -1;
@@ -208,25 +166,11 @@ int  validateProc(int procNum, char mode)
 	return i;
 }
 
-void validateArgs(char* arg1, char* arg2)
-{
-  if(arg1  == NULL || arg2  == NULL){
-		fprintf(stderr, "forgot input file name or number of frames\n");
-		exit(0);
-	}
-  return;
-} 
-
 void insertNode(int procNum, int vpn)
-{
+{/*
   //Node *current = NULL;
   if(ghHead == NULL){
-      Node mru;
-      mru.procNum = procNum;
-      mru.vpn = vpn;
-			mru.next = NULL;
-			mru.prev = NULL;
-      ghHead = &mru;
+      
  			printf("first\n");
 			printf("%d %d\n", ghHead->procNum, ghHead->vpn);
 			return;
@@ -238,6 +182,51 @@ void insertNode(int procNum, int vpn)
 			bob = bob->next;
 		}
 		printf("\n");
-		
+		*/
 		return;
+}
+
+int main(int argc, char** argv)
+{
+	if(argc != 3){
+		fprintf(stderr, "[Error] Incorrect number of arguments\n");
+		fprintf(stderr, "[Usage] %s <number-of-processes> <input-file>\n", argv[0]);
+		return 1;
+	}
+	int numProcs = atoi(argv[1]);
+	if(numProcs < 1 || numProcs > PROCESS_LIMIT){
+		fprintf(stderr, "[Error] Number of processes must be between 1 and %d\n", PROCESS_LIMIT);
+		return 1;
+	}
+	
+  freeSpace = atoi(argv[1]);
+  MAXSPACE = freeSpace;
+  char* fileName = argv[2];
+  //globalHistory = malloc(MAXSPACE * sizeof(int));
+  
+  initializeList();
+
+  char commandCheck[12];
+  //param2 can be address size or vpn depending on instruction
+  int procNum, param2 = 0;
+
+  FILE *input = fopen(fileName, "r");
+                                                                                                                              
+  while(fscanf(input, "%s", commandCheck) != EOF){
+		if(!strncmp(commandCheck, "START", 2)){
+			fscanf(input, "%d %d\n", &procNum, &param2);
+			printf("Starting process %d with address size %d\n",procNum, param2);
+			start(procNum, param2);
+		}else if(!strncmp(commandCheck, "TERMINATE", 2)){
+			fscanf(input, "%d\n", &procNum);
+			printf("terminating process %d\n", procNum);
+			terminate(procNum);        
+		}else if(!strncmp(commandCheck, "REFERENCE", 2)){
+			fscanf(input, "%d %d\n", &procNum, &param2);
+			printf("Referencing process %d's page %d\n",procNum, param2);
+			reference(procNum, param2);
+		}      
+	}
+  close(input);
+  return 0;
 }
