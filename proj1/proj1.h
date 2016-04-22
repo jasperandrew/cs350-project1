@@ -3,18 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "h_node.h"
 
-typedef struct Node Node;
+h_node *ghHead = NULL;
 
-struct Node
-{
-  int procNum;
-  int vpn;
-  Node *next;
-  Node *prev;
-};
-
-Node *ghHead = NULL;
 int* pageTables[1000];
 int *globalHistory;
 int procList[1000];
