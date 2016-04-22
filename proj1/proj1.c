@@ -160,20 +160,23 @@ void refer(int procNum, int  vpn)
 	}
       if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
 	{
-	    //evict 
-	  int evictProcNum = lruHead->procNum;
-	  int evictVPN = lruHead->vpn;
-	  pageTables[evictProcNum][evictVPN] = 0x0;
-	  printf("vicitm proc: %d page: %d\n", lruHead->procNum, lruHead->vpn);
-	  // if(lruHead->next != NULL)
-	    lruHead = lruHead -> next;
-	  freeSpace++;
-	  faults++;
+	  //evict 
+	  if(lruHead != NULL)
+	    {
+	      int evictProcNum = validateProc(lruHead->procNum, 't');
+	      int evictVPN = lruHead->vpn;
+	      pageTables[evictProcNum][evictVPN] = 0;
+	      printf("vicitm proc: %d page: %d\n", lruHead->procNum, lruHead->vpn);
+	      //if(lruHead->next != NULL)
+	      lruHead = lruHead -> next;
+	      freeSpace++;
+	      faults++;
 
 	  
-	  //put page in mem
-	  pageTables[procListIndex][vpn] = 0x1;
-	  freeSpace--; 
+	      //put page in mem
+	      pageTables[procListIndex][vpn] = 0x1;
+	      freeSpace--; 
+	    }
 	}
      if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{
