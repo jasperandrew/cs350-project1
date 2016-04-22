@@ -177,7 +177,7 @@ void refer(int procNum, int  vpn)
 	}
       if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{
-	  pageTables[procListIndex][vpn] = 0x1; 
+	  pageTables[procListIndex][vpn] = 0x1;
 	  freeSpace--;
 	}
       totalRef++;
