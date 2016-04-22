@@ -153,12 +153,12 @@ void refer(int procNum, int  vpn)
   int procListIndex = validateProc(procNum, 't');
   if(procListIndex >=  0)
     {
-      // insertNode(procNum, vpn);
+      insertNode(procNum, vpn);
       if((pageTables[procListIndex][0]-1) <  vpn || (pageTables[procListIndex][vpn] != 0x1) || freeSpace == 00)
 	{
 	  faults++;
 	}
-      /*if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
+      if(pageTables[procListIndex][vpn] != 0x1 && freeSpace == 00)
 	{
 	    //evict 
 	  int evictProcNum = lruHead->procNum;
@@ -174,7 +174,7 @@ void refer(int procNum, int  vpn)
 	  //put page in mem
 	  pageTables[procListIndex][vpn] = 0x1;
 	  freeSpace--; 
-	}*/
+	}
      if(pageTables[procListIndex][vpn] != 0x1 && freeSpace > 0)
 	{
 	  pageTables[procListIndex][vpn] = 0x1; 
@@ -247,6 +247,8 @@ void insertNode(int procNum, int VPN)
       mru.procNum = procNum;
       mru.vpn = VPN;
       lruHead = &mru;
+      lruHead->next = NULL;
+      lruHead->prev = NULL;
       printf("Head created\n");
       return;
     }
@@ -259,11 +261,12 @@ void insertNode(int procNum, int VPN)
 	    head ->next->prev = head->prev;
 	  current = head;
 	}
-      head = head->next;
-      /*      if(head != NULL)
+      //head = head->next;
+      if(head->next != NULL)
 	{
-	printf("\nproc: %d page: %d\n", head->procNum, head->vpn); 
-	}*/
+	printf("\nproc: %d page: %d\n", head->next->procNum, head->next->vpn); 
+	}
+      head = head->next;
     }
   if(current == NULL)
     {
