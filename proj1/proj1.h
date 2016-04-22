@@ -2,6 +2,9 @@
 #ifndef lab5_h
 #define lab5_h
 
+#include <stdio.h>
+#include <stdlib.h>
+
 typedef struct Node Node;
 
 struct Node
@@ -12,7 +15,7 @@ struct Node
   Node *prev;
 }; 
 
-Node *lruHead;
+Node *ghHead = NULL;
 int* pageTables[1000];
 int *globalHistory;
 int procList[1000];
