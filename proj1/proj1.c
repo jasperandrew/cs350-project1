@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 //Jasper Andrew and Jacob Zwickler
 
 #include "proj1.h"
