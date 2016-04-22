@@ -160,14 +160,14 @@ void refer(int procNum, int  vpn)
 	{
 
 	    /*//evict 
-	  if(lruHead != NULL)
+	  if(ghHead != NULL)
 	    {
-	      int evictProcNum = validateProc(lruHead->procNum, 't');
-	      int evictVPN = lruHead->vpn;
+	      int evictProcNum = validateProc(ghHead->procNum, 't');
+	      int evictVPN = ghHead->vpn;
 	      pageTables[evictProcNum][evictVPN] = 0;
-	      printf("vicitm proc: %d page: %d\n", lruHead->procNum, lruHead->vpn);
-	      //if(lruHead->next != NULL)
-	      lruHead = lruHead -> next;
+	      printf("vicitm proc: %d page: %d\n", ghHead->procNum, ghHead->vpn);
+	      //if(ghHead->next != NULL)
+	      ghHead = ghHead -> next;
 	      freeSpace++;
 	      faults++;
 
