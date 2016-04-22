@@ -161,9 +161,17 @@ void updateHistory(int procNum, int vpn)
 		return;
 	}
 	
-	h_node *itr = globalHist;
-	while(itr->next != NULL){
+	h_node *itr = globalHist, *curr;
+	while((curr = itr)->next != NULL){
+		int freeNode = 0;
+		if(itr->procNum == procNum && itr->vpn == vpn){
+			if(itr->prev != NULL) itr->prev->next = itr->next;
+			else globalHist = itr->next;
+			if(itr->next != NULL) itr->next->prev = itr->prev;
+			freeNode = 1;
+		}
 		itr = itr->next;
+		if(freeNode) free(curr);
 	}
 	
 	h_node *newNode = malloc(sizeof(h_node));
