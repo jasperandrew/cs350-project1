@@ -17,6 +17,7 @@ struct h_node_s {
 	struct h_node_s *next;
 };
 
+// Global variables
 h_node *globalHist = NULL;
 int *pageTables[PROCESS_LIMIT];
 int procList[PROCESS_LIMIT];
@@ -25,12 +26,27 @@ int totalPages;
 int numFaults = 0;
 int numRefs = 0;
 
-void initializeProcList();
-int validateProc(int procNum, int mode);
-int start(int procNum, int addrSz);
-int terminate(int procNum);
-int reference(int procNum, int  vpn);
+// Processing functions
+void start(int procNum, int addrSz);
+void terminate(int procNum);
+void reference(int procNum, int  vpn);
+
+// Helper functions
+int getValidProcIndex(int procNum, int mode);
+int currProcCount();
+int getAddrSpaceSize(int procListIdx){ return pageTables[procListIdx][0]; }
+
+int pageInMem(int procListIdx, int vpn){ return pageTables[procListIdx][vpn]; }
+void storePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 1; freePages--; }
+void evictPage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 0; freePages++; }
+
+void cleanUp();
+
+// History functions
 void updateHistory(int procNum, int  vpn);
 void freeHistory();
+
+// Replacement policies
+void leastRecentlyUsed();
 
 #endif

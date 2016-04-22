@@ -1,205 +1,5 @@
 #include "proj1.h"
 
-int start(int procNum, int addrSpaceSize)
-{
-  int i = 0, j;
-  
-  //search if process already running 
-  int valid = validateProc(procNum, 1);
-	
-  if(valid < 0) return 1;
-	
-	//search if limit for processes reached - 
-	while(procList[i] != 0){
-		if(i < PROCESS_LIMIT){
-			i++;
-		}else{
-			fprintf(stderr, "[Error] Too many processes running (max %d)\n", PROCESS_LIMIT);
-			return;
-		}
-	}
-	
-	// place process in process list
-	procList[i] = procNum;
-	
-	// create an "address space" for the process at same index as process list
-	pageTables[i] = malloc(sizeof(int) * (addrSpaceSize+1));
-	
-	// set address space size
-	pageTables[i][0] = addrSpaceSize;
-	
-	// initialize valid bits to 0
-	for(j = 1; j < addrSpaceSize+1; j++){
-		pageTables[i][j] = 0;
-	}
-
-  return 0;
-}
-
-int terminate(int procNum)
-{
-  int i = 0, j = 0, valid = validateProc(procNum, 0);
-	
-  if(valid < 0) return 1;
-	
-	while(procList[i] != procNum){
-		i++;
-	}
-	
-	//get address space size
-	int addrSpaceSize = pageTables[i][0];  
-	
-	for(j = 1; j < addrSpaceSize; j++){
-		//update free pages
-		if(freePages < totalPages && pageTables[i][j]){
-			freePages++;
-		}
-	}
-	
-	printf("free frames: %d\n", freePages);
-	free(pageTables[i]);
-	
-	return 0;
-}
-
-int reference(int procNum, int  vpn)
-{
-  int procListIndex = validateProc(procNum, 0);
-	
-  if(procListIndex <  0) return 1;
-	
-	int addrSpaceSize = pageTables[procListIndex][0];
-	int inMemory = pageTables[procListIndex][vpn];
-	
-	updateHistory(procNum, vpn);
-	
-	// if( page number is out of bounds )
-	if(vpn < 1 || vpn > addrSpaceSize){
-		fprintf(stderr, "[Error] Page number out of bounds\n");
-		fprintf(stderr, "        Please use a valid input file\n");
-		return 1;
-	}
-	
-	// if( page is not in memory )
-	if(!inMemory){
-		// if( memory is not full )
-		if(freePages > 0){
-			pageTables[procListIndex][vpn] = 1;
-			freePages--;
-		}else{
-			
-		}
-		numFaults++;
-	}else{
-		
-	}
-	
-	// if( page is not in memory && memory is full )
-	//if(pageTables[procListIndex][vpn] != 0x1 && freePages == 00){
-
-		/*//evict 
-	if(ghHead != NULL)
-		{
-			int evictProcNum = validateProc(ghHead->procNum, 't');
-			int evictVPN = ghHead->vpn;
-			pageTables[evictProcNum][evictVPN] = 0;
-			printf("vicitm proc: %d page: %d\n", ghHead->procNum, ghHead->vpn);
-			//if(ghHead->next != NULL)
-			ghHead = ghHead -> next;
-			freePages++;
-			faults++;
-
-
-			//put page in mem
-			pageTables[procListIndex][vpn] = 0x1;
-			freePages--; 
-			}*/
-
-	//}
-	
-	numRefs++;
-	printf("free frames: %d\n", freePages);
-	printf("faults( %d ), references( %d ) -> fault rate( %.4f )\n\n", numFaults, numRefs, (double)numFaults/numRefs);
-	
-  return 0;
-}
-
-int validateProc(int procNum, int mode)
-{
-  int i;
-	
-	for(i = 0; i < PROCESS_LIMIT; i++){
-		if(procList[i] == procNum){
-			if(mode == 0) return i;
-			else break;
-		}
-	}
-	
-	if(i < PROCESS_LIMIT){
-		fprintf(stderr, "[Error] Cannot start pre-existing process\n");
-		fprintf(stderr, "        Please use a valid input file\n");
-	}else{
-		if(mode == 0){
-			fprintf(stderr, "[Error] Cannot reference/terminate nonexistent process\n");
-			fprintf(stderr, "        Please use a valid input file\n");
-		}else{
-			return 0;
-		}
-	}
-	return -1;
-}
-
-void updateHistory(int procNum, int vpn)
-{
-  if(globalHist == NULL){
-		globalHist = malloc(sizeof(h_node));
-		globalHist->procNum = procNum;
-		globalHist->vpn = vpn;
-		globalHist->prev = NULL;
-		globalHist->next = NULL;
-		printf("-(%d|%d)-\n", globalHist->procNum, globalHist->vpn);
-		return;
-	}
-	
-	h_node *itr = globalHist, *curr;
-	while((curr = itr)->next != NULL){
-		int freeNode = 0;
-		if(itr->procNum == procNum && itr->vpn == vpn){
-			if(itr->prev != NULL) itr->prev->next = itr->next;
-			else globalHist = itr->next;
-			if(itr->next != NULL) itr->next->prev = itr->prev;
-			freeNode = 1;
-		}
-		itr = itr->next;
-		if(freeNode) free(curr);
-	}
-	
-	h_node *newNode = malloc(sizeof(h_node));
-	newNode->procNum = procNum;
-	newNode->vpn = vpn;
-	newNode->prev = itr;
-	newNode->next = NULL;
-	itr->next = newNode;
-
-	h_node *bob = globalHist;
-	while(bob != NULL){
-		printf("-(%d|%d)-", bob->procNum, bob->vpn);
-		bob = bob->next;
-	}
-	printf("\n");
-	
-	return;
-}
-
-void freeHistory()
-{
-	h_node *itr = globalHist, *curr;
-	while((curr = itr) != NULL){
-		itr = itr->next;
-		free(curr);
-	}
-}
-
 int main(int argc, char** argv)
 {
 	if(argc != 3){
@@ -239,7 +39,193 @@ int main(int argc, char** argv)
 	}
 	
   close(input);
-	freeHistory();
+	cleanUp();
   
 	return 0;
+}
+
+/*-------------------------------------------------------------*\
+|*                   	Processing Functions                     *|
+\*-------------------------------------------------------------*/
+void start(int procNum, int addrSpaceSize)
+{
+  int i = 0, j;
+  
+  //search if process already running 
+  int valid = getValidProcIndex(procNum, 1);
+	
+	// check if limit for processes reached - 
+	i = currProcCount();
+	
+	// place process in process list
+	procList[i] = procNum;
+	
+	// create an "address space" for the process at same index as process list
+	pageTables[i] = malloc(sizeof(int) * (addrSpaceSize + 1));
+	
+	// set address space size
+	pageTables[i][0] = addrSpaceSize;
+	
+	// initialize valid bits to 0
+	for(j = 1; j < addrSpaceSize + 1; j++){
+		pageTables[i][j] = 0;
+	}
+}
+
+void terminate(int procNum)
+{
+  int i, procListIdx = getValidProcIndex(procNum, 0);
+	
+	//get address space size
+	int size = getAddrSpaceSize(procListIdx);  
+	
+	for(i = 1; i < size; i++){
+		//update free pages
+		if(freePages < totalPages && pageInMem(procListIdx, i)){
+			evictPage(procListIdx, i);
+		}
+	}
+	
+	printf("free frames: %d\n", freePages);
+}
+
+void reference(int procNum, int  vpn)
+{
+  int procListIdx = getValidProcIndex(procNum, 0);
+	
+	// if( page number is out of bounds )
+	if(vpn < 1 || vpn > getAddrSpaceSize(procListIdx)){
+		fprintf(stderr, "[Error] Page number out of bounds\n");
+		fprintf(stderr, "        Please use a valid input file\n");
+		cleanUp();
+		exit(1);
+	}
+	
+	updateHistory(procNum, vpn);
+	
+	// if( page is not in memory )
+	if(!pageInMem(procListIdx, vpn)){
+		// if( memory is not full )
+		if(freePages > 0){
+			storePage(procListIdx, vpn);
+		}else{
+			// evict a page
+			leastRecentlyUsed();
+		}
+		numFaults++;
+	}
+	
+	numRefs++;
+	printf("free frames: %d\n", freePages);
+	printf("faults( %d ), references( %d ) -> fault rate( %.4f )\n\n", numFaults, numRefs, (double)numFaults/numRefs);
+}
+
+/*-------------------------------------------------------------*\
+|*                      Helper Functions                       *|
+\*-------------------------------------------------------------*/
+int getValidProcIndex(int procNum, int mode)
+{
+  int i;
+	
+	for(i = 0; i < PROCESS_LIMIT; i++){
+		if(procList[i] == procNum){
+			if(mode == 0) return i;
+			else break;
+		}
+	}
+	
+	if(i < PROCESS_LIMIT){
+		fprintf(stderr, "[Error] Cannot start pre-existing process\n");
+		fprintf(stderr, "        Please use a valid input file\n");
+	}else{
+		if(mode == 0){
+			fprintf(stderr, "[Error] Cannot reference/terminate nonexistent process\n");
+			fprintf(stderr, "        Please use a valid input file\n");
+		}else{
+			return 0;
+		}
+	}
+	cleanUp();
+	exit(1);
+}
+
+int currProcCount()
+{
+	int i = 0;
+	while(procList[i] != 0){
+		if(i < PROCESS_LIMIT){
+			i++;
+		}else{
+			fprintf(stderr, "[Error] Too many processes running (max %d)\n", PROCESS_LIMIT);
+			cleanUp();
+			exit(1);
+		}
+	}
+	return i;
+}
+
+void cleanUp()
+{
+	// free history nodes
+	h_node *itr = globalHist, *curr;
+	while((curr = itr) != NULL){
+		itr = itr->next;
+		free(curr);
+	}
+}
+
+/*-------------------------------------------------------------*\
+|*                     History Functions                       *|
+\*-------------------------------------------------------------*/
+void updateHistory(int procNum, int vpn)
+{
+  if(globalHist == NULL){
+		globalHist = malloc(sizeof(h_node));
+		globalHist->procNum = procNum;
+		globalHist->vpn = vpn;
+		globalHist->prev = NULL;
+		globalHist->next = NULL;
+		printf("-(%d|%d)-\n", globalHist->procNum, globalHist->vpn);
+		return;
+	}
+	
+	h_node *itr = globalHist, *curr;
+	while((curr = itr)->next != NULL){
+		int freeNode = 0;
+		if(itr->procNum == procNum && itr->vpn == vpn){
+			if(itr->prev != NULL) itr->prev->next = itr->next;
+			else globalHist = itr->next;
+			
+			if(itr->next != NULL) itr->next->prev = itr->prev;
+			else return;
+			
+			freeNode = 1;
+		}
+		itr = itr->next;
+		if(freeNode) free(curr);
+	}
+	
+	h_node *newNode = malloc(sizeof(h_node));
+	newNode->procNum = procNum;
+	newNode->vpn = vpn;
+	newNode->prev = itr;
+	newNode->next = NULL;
+	itr->next = newNode;
+
+	h_node *bob = globalHist;
+	while(bob != NULL){
+		printf("-(%d|%d)-", bob->procNum, bob->vpn);
+		bob = bob->next;
+	}
+	printf("\n");
+	
+	return;
+}
+
+/*-------------------------------------------------------------*\
+|*                   Replacement Policies                      *|
+\*-------------------------------------------------------------*/
+void leastRecentlyUsed()
+{
+	
 }
