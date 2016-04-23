@@ -2,10 +2,25 @@
 
 int main(int argc, char** argv)
 {
-	if(argc != 3){
+	if(argc != 4){
 		fprintf(stderr, "[Error] Incorrect number of arguments\n");
-		fprintf(stderr, "[Usage] %s <number-of-processes> <input-file>\n", argv[0]);
-		return 1;
+		fprintf(stderr, "[Usage] %s <number-of-processes> <input-file> <replacement-policy>\n", argv[0]);
+		fprintf(stderr, "        Note: <replacement-policy> can be:\n");
+		fprintf(stderr, "              - lru (Least Recently Used)\n");
+		fprintf(stderr, "              - rnd (Random)\n");
+		fprintf(stderr, "              - nfu (Not Frequently Used)\n");
+		exit(1);
+	}
+	
+	policy = (strcmp(argv[3], "lru") == 0 ? 0 : (strcmp(argv[3], "rnd") == 0 ? 1 : (strcmp(argv[3], "nfu") == 0 ? 2 : -1 )));
+	if(policy == -1){
+		fprintf(stderr, "[Error] Unrecognized replacement policy option (%s)\n", argv[3]);
+		fprintf(stderr, "[Usage] %s <number-of-processes> <input-file> <replacement-policy>\n", argv[0]);
+		fprintf(stderr, "        Note: <replacement-policy> can be:\n");
+		fprintf(stderr, "              - lru (Least Recently Used)\n");
+		fprintf(stderr, "              - rnd (Random)\n");
+		fprintf(stderr, "              - nfu (Not Frequently Used)\n");
+		exit(1);
 	}
 	
 	totalPages = atoi(argv[1]);
@@ -109,7 +124,11 @@ void reference(int procNum, int  vpn)
 		// if( memory is full )
 		if(!freePages){
 			// evict a page
-			leastRecentlyUsed();
+			switch(policy){
+				case 0: replaceLRU(); break;
+				case 1: replaceRandom(); break;
+				case 2: replaceNFU();
+			}
 		}
 		
 		storePage(procListIdx, vpn);
@@ -187,53 +206,70 @@ void updateHistory(int procNum, int vpn)
 		globalHist = malloc(sizeof(h_node));
 		globalHist->procNum = procNum;
 		globalHist->vpn = vpn;
+		globalHist->ctr = 0;
 		globalHist->prev = NULL;
 		globalHist->next = NULL;
-		if(DBG) printf("-[%d|%d]-\n", globalHist->procNum, globalHist->vpn);
+		if(DBG) printf("-[%d|%d](%d)-\n", globalHist->procNum, globalHist->vpn, globalHist->ctr);
 		return;
 	}
 	
-	h_node *itr = globalHist, *curr;
-	while((curr = itr)->next != NULL){
-		int freeNode = 0;
+	h_node *itr = globalHist, *curr = NULL;
+	while(itr->next != NULL){
 		if(itr->procNum == procNum && itr->vpn == vpn){
+			curr = itr;
 			if(itr->prev != NULL) itr->prev->next = itr->next;
 			else globalHist = itr->next;
 			
-			if(itr->next != NULL) itr->next->prev = itr->prev;
-			else return;
-			
-			freeNode = 1;
+			itr->next->prev = itr->prev;
 		}
 		itr = itr->next;
-		if(freeNode) free(curr);
+		if(itr->procNum == procNum && itr->vpn == vpn) curr = itr;
 	}
 	
-	h_node *newNode = malloc(sizeof(h_node));
-	newNode->procNum = procNum;
-	newNode->vpn = vpn;
-	newNode->prev = itr;
-	newNode->next = NULL;
-	itr->next = newNode;
-
+	if(curr == NULL){
+		h_node *newNode = malloc(sizeof(h_node));
+		newNode->procNum = procNum;
+		newNode->vpn = vpn;
+		newNode->ctr = 0;
+		newNode->prev = itr;
+		newNode->next = NULL;
+		itr->next = newNode;
+	}else{
+		if(curr->next != NULL){
+			itr->next = curr;
+			curr->prev = itr;
+			curr->next = NULL;
+		}
+		curr->ctr++;
+	}
+	
 	if(DBG){
 		h_node *bob = globalHist;
 		while(bob != NULL){
-			printf("-[%d|%d]-", bob->procNum, bob->vpn);
+			printf("-[%d|%d](%d)-", bob->procNum, bob->vpn, bob->ctr);
 			bob = bob->next;
 		}
 		printf("\n");
 	}
-	
-	return;
+}
+
+int getHistLength()
+{
+	int n = 0;
+	h_node *itr = globalHist;
+	while(itr != NULL){
+		n++;
+		itr = itr->next;
+	}
+	return n;
 }
 
 /*-------------------------------------------------------------*\
 |*                   Replacement Policies                      *|
 \*-------------------------------------------------------------*/
-void leastRecentlyUsed()
+void replaceLRU() // Least Recently Used Replacement
 {
-	if(DBG) printf("evicted: -[%d|%d]-", globalHist->procNum, globalHist->vpn);
+	if(DBG) printf("evicted LRU: -[%d|%d](%d)-\n", globalHist->procNum, globalHist->vpn, globalHist->ctr);
 	deletePage(getValidProcIndex(globalHist->procNum, 0), globalHist->vpn);
 	
 	h_node *tmp = globalHist;
@@ -243,4 +279,48 @@ void leastRecentlyUsed()
 	}
 
 	free(tmp);
+}
+
+void replaceRandom() // Random Replacement
+{
+	srand(time(NULL));
+	int randomIdx = rand() % getHistLength();
+
+	h_node *itr = globalHist;
+	while(randomIdx > 0){
+		randomIdx--;
+		itr = itr->next;
+	}
+	if(DBG) printf("evicted random: -[%d|%d](%d)-\n", itr->procNum, itr->vpn, itr->ctr);
+	deletePage(getValidProcIndex(itr->procNum, 0), itr->vpn);
+	
+	if(itr->prev != NULL) itr->prev->next = itr->next;
+	else globalHist = itr->next;
+	
+	if(itr->next != NULL) itr->next->prev = itr->prev;
+
+	free(itr);
+}
+
+void replaceNFU() // Not Frequently Used Replacement
+{
+	int min = -1;
+	h_node *itr = globalHist, *minNode;
+	while(itr != NULL){
+		if(itr->ctr < min || min == -1){
+			min = itr->ctr;
+			minNode = itr;
+		}
+		itr = itr->next;
+	}
+	
+	if(DBG) printf("evicted NFU: -[%d|%d](%d)-\n", minNode->procNum, minNode->vpn, minNode->ctr);
+	deletePage(getValidProcIndex(minNode->procNum, 0), minNode->vpn);
+	
+	if(minNode->prev != NULL) minNode->prev->next = minNode->next;
+	else globalHist = minNode->next;
+	
+	if(minNode->next != NULL) minNode->next->prev = minNode->prev;
+
+	free(minNode);	
 }

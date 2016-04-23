@@ -5,15 +5,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define PROCESS_LIMIT 1000
-#define DBG 0
+#define DBG 1
 
 typedef struct h_node_s h_node;
 
 struct h_node_s {
 	int procNum;
 	int vpn;
+	int ctr;
 	struct h_node_s *prev;
 	struct h_node_s *next;
 };
@@ -26,6 +28,7 @@ int freePages;
 int totalPages;
 int numFaults = 0;
 int numRefs = 0;
+int policy;
 
 // Processing functions
 void start(int procNum, int addrSz);
@@ -44,9 +47,11 @@ void deletePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 0; fre
 
 // History functions
 void updateHistory(int procNum, int  vpn);
-void freeHistory();
+int getHistLength();
 
 // Replacement policies
-void leastRecentlyUsed();
+void replaceLRU();
+void replaceRandom();
+void replaceNFU();
 
 #endif
