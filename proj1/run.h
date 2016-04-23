@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define DBG 1
+#define DBG 0
 
 typedef struct h_node_s h_node;
 
