@@ -9,7 +9,7 @@ using namespace std;
 
 class Process {
 	public:
-		Process(int n, int r, int s): pid(n), tot_refs(r), rem_refs(r), size(s), min_ref(0), max_ref(s-1), phase(1) {}
+		Process(int n, int r, int s): pid(n), tot_refs(r), rem_refs(r), size(s), min_ref(1), max_ref(s), phase(1) {}
 		int getPID(){ return pid; }
 		int getTotRefs(){ return tot_refs; }
 		int getRemRefs(){ return rem_refs; }
@@ -19,14 +19,14 @@ class Process {
 		double getPctDone(){ return ((tot_refs-rem_refs)/(double)tot_refs)*100; }
 		void changeLocus(int l){
 			if(l == 0){
-				min_ref = 0;
-				max_ref = size-1;
+				min_ref = 1;
+				max_ref = size;
 				return;
 			}
-			int locus = 0 + (rand() % (size));
+			int locus = 1 + (rand() % (size));
 
-			min_ref = (locus - l < 0 ? 0 : locus - l);
-			max_ref = (locus + l > size-1 ? size-1 : locus + l);
+			min_ref = (locus - l < 1 ? 1 : locus - l);
+			max_ref = (locus + l > size ? size : locus + l);
 		}
 		int getFrame(){
 			rem_refs--;
