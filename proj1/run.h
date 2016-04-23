@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define DBG 0
+#define DBG 1
 
 typedef struct h_node_s h_node;
 
@@ -26,6 +26,8 @@ int totalPages;
 
 h_node *globalHist = NULL;
 h_node **localHists = NULL;
+int currProcNum;
+
 int *procList;
 int **pageTables;
 int freePages;
@@ -49,12 +51,13 @@ void storePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 1; free
 void deletePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 0; freePages++; }
 
 // History functions
-void updateHistory(int procNum, int  vpn);
-int getHistLength();
+void updateHistory(int procNum, int  vpn, h_node *hist);
+int getHistLength(h_node *hist);
+h_node *getHist(int procListIdx);
 
 // Replacement policies
-void replaceLRU();
-void replaceRandom();
-void replaceNFU();
+void replaceLRU(h_node *hist);
+void replaceRandom(h_node *hist);
+void replaceNFU(h_node *hist);
 
 #endif
