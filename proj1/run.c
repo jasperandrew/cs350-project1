@@ -130,40 +130,38 @@ void terminate(int procNum)
 //---------------------------------------------------------------
 void reference(int procNum, int  vpn)
 {
-  int procListIdx = getValidProcIndex(procNum, 0);
+  currProcIdx = getValidProcIndex(procNum, 0);
 
 	// if( page number is out of bounds )
-	if(vpn < 1 || vpn > getAddrSpaceSize(procListIdx)){
+	if(vpn < 1 || vpn > getAddrSpaceSize(currProcIdx)){
 		fprintf(stderr, "[Error] Page number out of bounds\n");
 		fprintf(stderr, "        Please use a valid input file\n");
 		cleanUp();
 		exit(1);
 	}
 	
-	h_node *hist = getHist(procListIdx);
-
 	// if( page is not in memory )
-	if(!pageInMem(procListIdx, vpn)){
+	if(!pageInMem(currProcIdx, vpn)){
 		// if( memory is full )
 		if(!freePages){
 			// evict a page
 			switch(policy){
-				case 0: replaceLRU(hist); break;
-				case 1: replaceRandom(hist); break;
-				case 2: replaceNFU(hist);
+				case 0: replaceLRU(); break;
+				case 1: replaceRandom(); break;
+				case 2: replaceNFU();
 			}
 		}
 		
-		storePage(procListIdx, vpn);
+		storePage(currProcIdx, vpn);
 		
 		numFaults++;
 	}
 	
-	updateHistory(procNum, vpn, hist);
+	updateHistory(procNum, vpn);
 	
 	numRefs++;
-	if(DBG) printf("free frames: %d\n", freePages);
-	if(DBG) printf("faults( %d ), references( %d ) -> fault rate( %.4f )\n\n", numFaults, numRefs, (double)numFaults/numRefs);
+	if(DBG) printf("Free frames: %d\n", freePages);
+	if(DBG) printf("Faults( %d ), References( %d ) -> Fault rate( %.4f )\n\n", numFaults, numRefs, (double)numFaults/numRefs);
 }
 
 
@@ -173,7 +171,6 @@ void reference(int procNum, int  vpn)
 int getValidProcIndex(int procNum, int mode)
 {
   int i;
-	
 	for(i = 0; i < numProcesses; i++){
 		if(procList[i] == procNum){
 			if(mode == 0) return i;
@@ -231,12 +228,12 @@ void cleanUp()
 	}
 	
 	// free local history nodes
-	if(localHists){
+	if(localHists != NULL){
 		for(i = 0; i < numProcesses; i++){
 			itr = localHists[i];
 			while((curr = itr) != NULL){
 				itr = itr->next;
-				free(curr);
+				if(curr != NULL) free(curr);
 			}
 		}
 		free(localHists);
@@ -259,25 +256,30 @@ void printUsage(char *arg){
 /*-------------------------------------------------------------*\
 |*                     History Functions                       *|
 \*-------------------------------------------------------------*/
-void updateHistory(int procNum, int vpn, h_node *hist)
+void updateHistory(int procNum, int vpn)
 {
-  if(globalHist == NULL){
-		globalHist = malloc(sizeof(h_node));
-		globalHist->procNum = procNum;
-		globalHist->vpn = vpn;
-		globalHist->ctr = 0;
-		globalHist->prev = NULL;
-		globalHist->next = NULL;
-		if(DBG) printf("-[%d|%d](%d)-\n", globalHist->procNum, globalHist->vpn, globalHist->ctr);
+	h_node *hist = ( scope == 0 ? globalHist : localHists[currProcIdx] );
+	
+  if(hist == NULL){
+		hist = malloc(sizeof(h_node));
+		hist->procNum = procNum;
+		hist->vpn = vpn;
+		hist->ctr = 0;
+		hist->prev = NULL;
+		hist->next = NULL;
+		if(DBG) printf("+-[%d|%d](%d)-\n", hist->procNum, hist->vpn, hist->ctr);
+		
+		if(scope == 0) globalHist = hist;
+		else localHists[currProcIdx] = hist;
 		return;
 	}
-	
-	h_node *itr = globalHist, *curr = NULL;
+
+	h_node *itr = hist, *curr = NULL;
 	while(itr->next != NULL){
 		if(itr->procNum == procNum && itr->vpn == vpn){
 			curr = itr;
 			if(itr->prev != NULL) itr->prev->next = itr->next;
-			else globalHist = itr->next;
+			else hist = itr->next;
 			
 			itr->next->prev = itr->prev;
 		}
@@ -303,18 +305,23 @@ void updateHistory(int procNum, int vpn, h_node *hist)
 	}
 	
 	if(DBG){
-		h_node *bob = globalHist;
+		h_node *bob = hist;
 		while(bob != NULL){
 			printf("-[%d|%d](%d)-", bob->procNum, bob->vpn, bob->ctr);
 			bob = bob->next;
 		}
 		printf("\n");
 	}
+	
+	if(scope == 0) globalHist = hist;
+	else localHists[currProcIdx] = hist;
 }
 
 //---------------------------------------------------------------
-int getHistLength(h_node *hist)
+int getHistLength()
 {
+	h_node *hist = ( scope == 0 ? globalHist : localHists[currProcIdx] );
+
 	int n = 0;
 	h_node *itr = globalHist;
 	while(itr != NULL){
@@ -324,41 +331,38 @@ int getHistLength(h_node *hist)
 	return n;
 }
 
-//---------------------------------------------------------------
-h_node *getHist(int procListIdx)
-{
-	if(scope == 0){
-		return globalHist;
-	}else{
-		return localHists[procListIdx];
-	}
-}
-
 
 /*-------------------------------------------------------------*\
 |*                   Replacement Policies                      *|
 \*-------------------------------------------------------------*/
-void replaceLRU(h_node *hist) // Least Recently Used Replacement
+void replaceLRU() // Least Recently Used Replacement
 {
-	if(DBG) printf("evicted LRU: -[%d|%d](%d)-\n", globalHist->procNum, globalHist->vpn, globalHist->ctr);
-	deletePage(getValidProcIndex(globalHist->procNum, 0), globalHist->vpn);
+	h_node *hist = ( scope == 0 ? globalHist : localHists[currProcIdx] );
+
+	if(DBG) printf("evicted LRU: -[%d|%d](%d)-\n", hist->procNum, hist->vpn, hist->ctr);
+	deletePage(getValidProcIndex(hist->procNum, 0), hist->vpn);
 	
-	h_node *tmp = globalHist;
-	if(globalHist->next != NULL){
-		globalHist->next->prev = NULL;
-		globalHist = globalHist->next;
+	h_node *tmp = hist;
+	if(hist->next != NULL){
+		hist->next->prev = NULL;
+		hist = hist->next;
 	}
 
 	free(tmp);
+	
+	if(scope == 0) globalHist = hist;
+	else localHists[currProcIdx] = hist;
 }
 
 //---------------------------------------------------------------
-void replaceRandom(h_node *hist) // Random Replacement
+void replaceRandom() // Random Replacement
 {
+	h_node *hist = ( scope == 0 ? globalHist : localHists[currProcIdx] );
+	
 	srand(time(NULL));
-	int randomIdx = rand() % getHistLength(hist);
-
-	h_node *itr = globalHist;
+	int randomIdx = rand() % getHistLength();
+	
+	h_node *itr = hist;
 	while(randomIdx > 0){
 		randomIdx--;
 		itr = itr->next;
@@ -367,18 +371,23 @@ void replaceRandom(h_node *hist) // Random Replacement
 	deletePage(getValidProcIndex(itr->procNum, 0), itr->vpn);
 	
 	if(itr->prev != NULL) itr->prev->next = itr->next;
-	else globalHist = itr->next;
+	else hist = itr->next;
 	
 	if(itr->next != NULL) itr->next->prev = itr->prev;
 
 	free(itr);
+
+	if(scope == 0) globalHist = hist;
+	else localHists[currProcIdx] = hist;
 }
 
 //---------------------------------------------------------------
-void replaceNFU(h_node *hist) // Not Frequently Used Replacement
+void replaceNFU() // Not Frequently Used Replacement
 {
+	h_node *hist = ( scope == 0 ? globalHist : localHists[currProcIdx] );
+	
 	int min = -1;
-	h_node *itr = globalHist, *minNode;
+	h_node *itr = hist, *minNode;
 	while(itr != NULL){
 		if(itr->ctr < min || min == -1){
 			min = itr->ctr;
@@ -391,9 +400,12 @@ void replaceNFU(h_node *hist) // Not Frequently Used Replacement
 	deletePage(getValidProcIndex(minNode->procNum, 0), minNode->vpn);
 	
 	if(minNode->prev != NULL) minNode->prev->next = minNode->next;
-	else globalHist = minNode->next;
+	else hist = minNode->next;
 	
 	if(minNode->next != NULL) minNode->next->prev = minNode->prev;
 
 	free(minNode);	
+
+	if(scope == 0) globalHist = hist;
+	else localHists[currProcIdx] = hist;
 }

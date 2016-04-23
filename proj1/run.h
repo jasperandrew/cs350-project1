@@ -26,7 +26,7 @@ int totalPages;
 
 h_node *globalHist = NULL;
 h_node **localHists = NULL;
-int currProcNum;
+int currProcIdx;
 
 int *procList;
 int **pageTables;
@@ -51,13 +51,12 @@ void storePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 1; free
 void deletePage(int procListIdx, int vpn){ pageTables[procListIdx][vpn] = 0; freePages++; }
 
 // History functions
-void updateHistory(int procNum, int  vpn, h_node *hist);
-int getHistLength(h_node *hist);
-h_node *getHist(int procListIdx);
+void updateHistory(int procNum, int  vpn);
+int getHistLength();
 
 // Replacement policies
-void replaceLRU(h_node *hist);
-void replaceRandom(h_node *hist);
-void replaceNFU(h_node *hist);
+void replaceLRU();
+void replaceRandom();
+void replaceNFU();
 
 #endif
