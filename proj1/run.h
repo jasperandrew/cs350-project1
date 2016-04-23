@@ -1,13 +1,11 @@
 // Jasper Andrew and Jacob Zwickler
-
-#ifndef lab5_h
-#define lab5_h
+#ifndef RUN_H
+#define RUN_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define PROCESS_LIMIT 1000
 #define DBG 1
 
 typedef struct h_node_s h_node;
@@ -21,9 +19,11 @@ struct h_node_s {
 };
 
 // Global variables
+int numProcesses = 0;
 h_node *globalHist = NULL;
-int *pageTables[PROCESS_LIMIT];
-int procList[PROCESS_LIMIT];
+//h_node *
+int *procList;
+int **pageTables;
 int freePages;
 int totalPages;
 int numFaults = 0;

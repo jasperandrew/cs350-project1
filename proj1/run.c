@@ -1,10 +1,11 @@
-#include "proj1.h"
+// Jasper Andrew and Jacob Zwickler
+#include "run.h"
 
 int main(int argc, char** argv)
 {
 	if(argc != 4){
 		fprintf(stderr, "[Error] Incorrect number of arguments\n");
-		fprintf(stderr, "[Usage] %s <number-of-processes> <input-file> <replacement-policy>\n", argv[0]);
+		fprintf(stderr, "[Usage] %s <pages-in-memory> <input-file> <replacement-policy>\n", argv[0]);
 		fprintf(stderr, "        Note: <replacement-policy> can be:\n");
 		fprintf(stderr, "              - lru (Least Recently Used)\n");
 		fprintf(stderr, "              - rnd (Random)\n");
@@ -15,7 +16,7 @@ int main(int argc, char** argv)
 	policy = (strcmp(argv[3], "lru") == 0 ? 0 : (strcmp(argv[3], "rnd") == 0 ? 1 : (strcmp(argv[3], "nfu") == 0 ? 2 : -1 )));
 	if(policy == -1){
 		fprintf(stderr, "[Error] Unrecognized replacement policy option (%s)\n", argv[3]);
-		fprintf(stderr, "[Usage] %s <number-of-processes> <input-file> <replacement-policy>\n", argv[0]);
+		fprintf(stderr, "[Usage] %s <pages-in-memory> <input-file> <replacement-policy>\n", argv[0]);
 		fprintf(stderr, "        Note: <replacement-policy> can be:\n");
 		fprintf(stderr, "              - lru (Least Recently Used)\n");
 		fprintf(stderr, "              - rnd (Random)\n");
@@ -25,18 +26,31 @@ int main(int argc, char** argv)
 	
 	totalPages = atoi(argv[1]);
   freePages = totalPages;
-  
-  //start program with no processes running
-  int i;
-  for(i = 0; i < PROCESS_LIMIT; i++){
-		procList[i] = 0;
-	}
 	
   FILE *input = fopen(argv[2], "r");
   char commandCheck[12];                                                                                                                              
-  int procNum, pageNum, addrSpaceSize;
 	
-	// scan input and run stuff accordingly
+	// Count the number of processes
+	while(fscanf(input, "%s", commandCheck) != EOF){
+		if(!strncmp(commandCheck, "START", 2)){
+			numProcesses++;
+		}
+	}
+	
+	// Allocate for number of processes
+	procList = malloc(sizeof(int) * numProcesses);
+	pageTables = malloc(sizeof(int*) * numProcesses);
+	
+	// Start program with no processes running
+  int i;
+  for(i = 0; i < numProcesses; i++){
+		procList[i] = 0;
+	}
+	
+	rewind(input);
+	
+	// Scan input and run stuff accordingly
+	int procNum, pageNum, addrSpaceSize;
 	while(fscanf(input, "%s", commandCheck) != EOF){
 		if(!strncmp(commandCheck, "START", 2)){
 			fscanf(input, "%d %d\n", &procNum, &addrSpaceSize);
@@ -150,14 +164,14 @@ int getValidProcIndex(int procNum, int mode)
 {
   int i;
 	
-	for(i = 0; i < PROCESS_LIMIT; i++){
+	for(i = 0; i < numProcesses; i++){
 		if(procList[i] == procNum){
 			if(mode == 0) return i;
 			else break;
 		}
 	}
 	
-	if(i < PROCESS_LIMIT){
+	if(i < numProcesses){
 		fprintf(stderr, "[Error] Cannot start pre-existing process\n");
 		fprintf(stderr, "        Please use a valid input file\n");
 	}else{
@@ -176,10 +190,10 @@ int currProcCount()
 {
 	int i = 0;
 	while(procList[i] != 0){
-		if(i < PROCESS_LIMIT){
+		if(i < numProcesses){
 			i++;
 		}else{
-			fprintf(stderr, "[Error] Too many processes running (max %d)\n", PROCESS_LIMIT);
+			fprintf(stderr, "[Error] Too many processes running (max %d)\n", numProcesses);
 			cleanUp();
 			exit(1);
 		}
@@ -189,6 +203,14 @@ int currProcCount()
 
 void cleanUp()
 {
+	// free procList
+	free(procList);
+	
+	// free pageTables
+	int i;
+	for(i = 0; i < numProcesses; i++) free(pageTables[i]);
+	free(pageTables);
+	
 	// free history nodes
 	h_node *itr = globalHist, *curr;
 	while((curr = itr) != NULL){
