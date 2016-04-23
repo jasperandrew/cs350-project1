@@ -19,16 +19,18 @@ struct h_node_s {
 };
 
 // Global variables
+int policy;
+int scope;
 int numProcesses = 0;
+int totalPages;
+
 h_node *globalHist = NULL;
-//h_node *
+h_node **localHists = NULL;
 int *procList;
 int **pageTables;
 int freePages;
-int totalPages;
 int numFaults = 0;
 int numRefs = 0;
-int policy;
 
 // Processing functions
 void start(int procNum, int addrSz);
@@ -39,6 +41,7 @@ void reference(int procNum, int  vpn);
 int getValidProcIndex(int procNum, int mode);
 int currProcCount();
 void cleanUp();
+void printUsage(char *arg);
 
 int getAddrSpaceSize(int procListIdx){ return pageTables[procListIdx][0]; }
 int pageInMem(int procListIdx, int vpn){ return pageTables[procListIdx][vpn]; }

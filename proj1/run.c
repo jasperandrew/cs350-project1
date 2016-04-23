@@ -3,28 +3,33 @@
 
 int main(int argc, char** argv)
 {
-	if(argc != 4){
+	if(argc != 5){
 		fprintf(stderr, "[Error] Incorrect number of arguments\n");
-		fprintf(stderr, "[Usage] %s <pages-in-memory> <input-file> <replacement-policy>\n", argv[0]);
-		fprintf(stderr, "        Note: <replacement-policy> can be:\n");
-		fprintf(stderr, "              - lru (Least Recently Used)\n");
-		fprintf(stderr, "              - rnd (Random)\n");
-		fprintf(stderr, "              - nfu (Not Frequently Used)\n");
-		exit(1);
-	}
-	
-	policy = (strcmp(argv[3], "lru") == 0 ? 0 : (strcmp(argv[3], "rnd") == 0 ? 1 : (strcmp(argv[3], "nfu") == 0 ? 2 : -1 )));
-	if(policy == -1){
-		fprintf(stderr, "[Error] Unrecognized replacement policy option (%s)\n", argv[3]);
-		fprintf(stderr, "[Usage] %s <pages-in-memory> <input-file> <replacement-policy>\n", argv[0]);
-		fprintf(stderr, "        Note: <replacement-policy> can be:\n");
-		fprintf(stderr, "              - lru (Least Recently Used)\n");
-		fprintf(stderr, "              - rnd (Random)\n");
-		fprintf(stderr, "              - nfu (Not Frequently Used)\n");
+		printUsage(argv[0]);
 		exit(1);
 	}
 	
 	totalPages = atoi(argv[1]);
+	if(totalPages < 1){
+		fprintf(stderr, "[Error] Number of pages in memory must be a positive value\n");
+		printUsage(argv[0]);
+		exit(1);
+	}
+
+	policy = (strcmp(argv[3], "lru") == 0 ? 0 : (strcmp(argv[3], "rnd") == 0 ? 1 : (strcmp(argv[3], "nfu") == 0 ? 2 : -1 )));
+	if(policy == -1){
+		fprintf(stderr, "[Error] Unrecognized replacement policy option (%s)\n", argv[3]);
+		printUsage(argv[0]);
+		exit(1);
+	}
+	
+	scope = (strcmp(argv[4], "global") == 0 ? 0 : (strcmp(argv[4], "local") == 0 ? 1 : -1 ));
+	if(scope == -1){
+		fprintf(stderr, "[Error] Unrecognized replacement type option (%s)\n", argv[4]);
+		printUsage(argv[0]);
+		exit(1);
+	}
+	
   freePages = totalPages;
 	
   FILE *input = fopen(argv[2], "r");
@@ -217,6 +222,17 @@ void cleanUp()
 		itr = itr->next;
 		free(curr);
 	}
+}
+
+void printUsage(char *arg){
+	fprintf(stderr, "[Usage] %s <pages-in-memory> <input-file> <policy> <scope>\n", arg);
+	fprintf(stderr, "\n        Note: <policy> can be:\n");
+	fprintf(stderr, "                - lru (Least Recently Used)\n");
+	fprintf(stderr, "                - rnd (Random)\n");
+	fprintf(stderr, "                - nfu (Not Frequently Used)\n");
+	fprintf(stderr, "              <scope> can be:\n");
+	fprintf(stderr, "                - global (Global Replacement)\n");
+	fprintf(stderr, "                - local (Local Replacement)\n");
 }
 
 /*-------------------------------------------------------------*\
