@@ -25,21 +25,24 @@ int main(int argc, char** argv)
 	while(fscanf(input, "%s", commandCheck) != EOF){
 		if(!strncmp(commandCheck, "START", 2)){
 			fscanf(input, "%d %d\n", &procNum, &addrSpaceSize);
-			printf("Starting process %d with address size %d\n",procNum, addrSpaceSize);
+			if(DBG) printf("Starting process %d with address size %d\n",procNum, addrSpaceSize);
 			start(procNum, addrSpaceSize);
 		}else if(!strncmp(commandCheck, "TERMINATE", 2)){
 			fscanf(input, "%d\n", &procNum);
-			printf("terminating process %d\n", procNum);
+			if(DBG) printf("Terminating process %d\n", procNum);
 			terminate(procNum);        
 		}else if(!strncmp(commandCheck, "REFERENCE", 2)){
 			fscanf(input, "%d %d\n", &procNum, &pageNum);
-			printf("Referencing process %d's page %d\n",procNum, pageNum);
+			if(DBG) printf("Referencing process %d's page %d\n",procNum, pageNum);
 			reference(procNum, pageNum);
 		}      
 	}
 	
   close(input);
 	cleanUp();
+	
+	printf("--- Statistics ---\n");
+	printf("References: %d\nFaults: %d\nFault Rate: %.4f\n", numRefs, numFaults, (double)numFaults/numRefs);
   
 	return 0;
 }
@@ -86,7 +89,7 @@ void terminate(int procNum)
 		}
 	}
 	
-	printf("free frames: %d\n", freePages);
+	if(DBG) printf("free frames: %d\n", freePages);
 }
 
 void reference(int procNum, int  vpn)
@@ -117,8 +120,8 @@ void reference(int procNum, int  vpn)
 	updateHistory(procNum, vpn);
 	
 	numRefs++;
-	printf("free frames: %d\n", freePages);
-	printf("faults( %d ), references( %d ) -> fault rate( %.4f )\n\n", numFaults, numRefs, (double)numFaults/numRefs);
+	if(DBG) printf("free frames: %d\n", freePages);
+	if(DBG) printf("faults( %d ), references( %d ) -> fault rate( %.4f )\n\n", numFaults, numRefs, (double)numFaults/numRefs);
 }
 
 /*-------------------------------------------------------------*\
@@ -186,7 +189,7 @@ void updateHistory(int procNum, int vpn)
 		globalHist->vpn = vpn;
 		globalHist->prev = NULL;
 		globalHist->next = NULL;
-		printf("-[%d|%d]-\n", globalHist->procNum, globalHist->vpn);
+		if(DBG) printf("-[%d|%d]-\n", globalHist->procNum, globalHist->vpn);
 		return;
 	}
 	
@@ -213,12 +216,14 @@ void updateHistory(int procNum, int vpn)
 	newNode->next = NULL;
 	itr->next = newNode;
 
-	h_node *bob = globalHist;
-	while(bob != NULL){
-		printf("-[%d|%d]-", bob->procNum, bob->vpn, pageInMem(getValidProcIndex(bob->procNum, 0), bob->vpn));
-		bob = bob->next;
+	if(DBG){
+		h_node *bob = globalHist;
+		while(bob != NULL){
+			printf("-[%d|%d]-", bob->procNum, bob->vpn);
+			bob = bob->next;
+		}
+		printf("\n");
 	}
-	printf("\n");
 	
 	return;
 }
@@ -228,6 +233,7 @@ void updateHistory(int procNum, int vpn)
 \*-------------------------------------------------------------*/
 void leastRecentlyUsed()
 {
+	if(DBG) printf("evicted: -[%d|%d]-", globalHist->procNum, globalHist->vpn);
 	deletePage(getValidProcIndex(globalHist->procNum, 0), globalHist->vpn);
 	
 	h_node *tmp = globalHist;

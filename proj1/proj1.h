@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #define PROCESS_LIMIT 1000
+#define DBG 0
 
 typedef struct h_node_s h_node;
 
